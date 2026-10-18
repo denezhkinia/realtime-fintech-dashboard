@@ -55,8 +55,13 @@ export class MarketSession implements OnDestroy {
   }
 
   private wasmUrl(): string {
-    const base = document.querySelector('base')?.href ?? '/';
-    return new URL('wasm/market-producer.wasm', base).toString();
+    const baseHref =
+      document.querySelector('base')?.getAttribute('href') || '/';
+    const origin =
+      typeof location !== 'undefined' && location.origin
+        ? location.origin
+        : 'http://localhost';
+    return new URL('wasm/market-producer.wasm', new URL(baseHref, origin)).toString();
   }
 
   private nextSeed(): number {
