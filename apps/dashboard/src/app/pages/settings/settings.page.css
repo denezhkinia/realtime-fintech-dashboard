@@ -44,18 +44,13 @@
 }
 
 .error-msg {
-  display: none;
   color: #b3261e;
   font-size: 0.875rem;
 }
 
-.field input:user-invalid {
+.field input.is-invalid {
   border-color: #b3261e;
   background-color: #fce8e6;
-}
-
-.field input:user-invalid ~ .error-msg {
-  display: block;
 }
 
 .apply {

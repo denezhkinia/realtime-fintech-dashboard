@@ -1,11 +1,8 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
-  OnDestroy,
   inject,
-  viewChild,
+  signal,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -13,7 +10,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { MarketSession } from '../../market/market-session.service';
-import { bindUserInvalidSync } from './sync-user-invalid';
+
+type SettingsControlName = 'instrumentCount' | 'batchSize' | 'intervalMs';
 
 @Component({
   selector: 'app-settings-page',
@@ -23,11 +21,12 @@ import { bindUserInvalidSync } from './sync-user-invalid';
   styleUrl: './settings.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SettingsPage implements AfterViewInit, OnDestroy {
+export class SettingsPage {
   private readonly fb = inject(FormBuilder);
   private readonly session = inject(MarketSession);
-  private readonly formRef = viewChild<ElementRef<HTMLFormElement>>('settingsForm');
-  private unbind: (() => void) | null = null;
+
+  /** True after the user attempts Apply; drives aria-invalid with touched. */
+  readonly submitted = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     instrumentCount: [
@@ -44,21 +43,17 @@ export class SettingsPage implements AfterViewInit, OnDestroy {
     ],
   });
 
-  ngAfterViewInit(): void {
-    const el = this.formRef()?.nativeElement;
-    if (el) {
-      this.unbind = bindUserInvalidSync(el);
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.unbind?.();
+  /** Invalid after blur or after a submit attempt — keeps AT and visuals aligned. */
+  showInvalid(name: SettingsControlName): boolean {
+    const control = this.form.controls[name];
+    return control.invalid && (control.touched || this.submitted());
   }
 
   onSubmit(event: Event): void {
+    this.submitted.set(true);
     const formEl = event.target as HTMLFormElement;
-    if (!formEl.checkValidity()) {
-      // Keep Apply enabled; native focus moves to the first invalid field.
+    if (!formEl.checkValidity() || this.form.invalid) {
+      // Keep Apply enabled; native constraints can still focus the first bad field.
       return;
     }
     const value = this.form.getRawValue();

@@ -6,8 +6,8 @@
   </p>
 
   <form
-    #settingsForm
     class="settings__form"
+    [formGroup]="form"
     (submit)="onSubmit($event)"
     novalidate
   >
@@ -24,9 +24,16 @@
         min="1"
         max="50"
         step="1"
+        [class.is-invalid]="showInvalid('instrumentCount')"
+        [attr.aria-invalid]="showInvalid('instrumentCount') ? true : null"
         aria-describedby="instrumentCount-hint instrumentCount-error"
       />
-      <div id="instrumentCount-error" class="error-msg" role="alert">
+      <div
+        id="instrumentCount-error"
+        class="error-msg"
+        role="alert"
+        [hidden]="!showInvalid('instrumentCount')"
+      >
         Enter an integer between 1 and 50.
       </div>
     </div>
@@ -44,9 +51,16 @@
         min="1"
         max="1000"
         step="1"
+        [class.is-invalid]="showInvalid('batchSize')"
+        [attr.aria-invalid]="showInvalid('batchSize') ? true : null"
         aria-describedby="batchSize-hint batchSize-error"
       />
-      <div id="batchSize-error" class="error-msg" role="alert">
+      <div
+        id="batchSize-error"
+        class="error-msg"
+        role="alert"
+        [hidden]="!showInvalid('batchSize')"
+      >
         Enter an integer between 1 and 1000.
       </div>
     </div>
@@ -64,9 +78,16 @@
         min="50"
         max="2000"
         step="1"
+        [class.is-invalid]="showInvalid('intervalMs')"
+        [attr.aria-invalid]="showInvalid('intervalMs') ? true : null"
         aria-describedby="intervalMs-hint intervalMs-error"
       />
-      <div id="intervalMs-error" class="error-msg" role="alert">
+      <div
+        id="intervalMs-error"
+        class="error-msg"
+        role="alert"
+        [hidden]="!showInvalid('intervalMs')"
+      >
         Enter an integer between 50 and 2000.
       </div>
     </div>
