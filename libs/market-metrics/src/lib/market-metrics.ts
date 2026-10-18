@@ -2,14 +2,14 @@ import { UpdateKind } from '@realtime-fintech/market-protocol';
 
 export { UpdateKind };
 
-export type MarketUpdate = {
+export type MarketUpdate = Readonly<{
   instrumentId: number;
   kind: UpdateKind;
   priceCents: number;
   qty: number;
-};
+}>;
 
-type InstrumentAccum = {
+type InstrumentAccum = Readonly<{
   bidCents: number | null;
   askCents: number | null;
   lastCents: number | null;
@@ -17,13 +17,13 @@ type InstrumentAccum = {
   volume: bigint;
   /** Sum of priceCents * qty for trades. */
   notionalCentsShares: bigint;
-};
+}>;
 
-export type MetricsState = {
-  instruments: Map<number, InstrumentAccum>;
-};
+export type MetricsState = Readonly<{
+  instruments: ReadonlyMap<number, InstrumentAccum>;
+}>;
 
-export type MetricsRow = {
+export type MetricsRow = Readonly<{
   instrumentId: number;
   symbol: string;
   bidCents: number | null;
@@ -31,7 +31,7 @@ export type MetricsRow = {
   lastCents: number | null;
   volume: number;
   vwapCents: number | null;
-};
+}>;
 
 function emptyAccum(): InstrumentAccum {
   return {
@@ -43,40 +43,46 @@ function emptyAccum(): InstrumentAccum {
   };
 }
 
-function getOrCreate(
+function withInstrument(
   state: MetricsState,
-  instrumentId: number
-): InstrumentAccum {
-  let accum = state.instruments.get(instrumentId);
-  if (!accum) {
-    accum = emptyAccum();
-    state.instruments.set(instrumentId, accum);
+  instrumentId: number,
+  accum: InstrumentAccum
+): MetricsState {
+  return {
+    instruments: new Map([...state.instruments, [instrumentId, accum]]),
+  };
+}
+
+function nextAccum(prev: InstrumentAccum, update: MarketUpdate): InstrumentAccum {
+  switch (update.kind) {
+    case UpdateKind.Bid:
+      return { ...prev, bidCents: update.priceCents };
+    case UpdateKind.Ask:
+      return { ...prev, askCents: update.priceCents };
+    case UpdateKind.Trade: {
+      const qty = BigInt(update.qty);
+      return {
+        ...prev,
+        volume: prev.volume + qty,
+        notionalCentsShares:
+          prev.notionalCentsShares + BigInt(update.priceCents) * qty,
+        lastCents: update.priceCents,
+      };
+    }
   }
-  return accum;
 }
 
 export function createMetricsState(): MetricsState {
   return { instruments: new Map() };
 }
 
-export function applyUpdate(state: MetricsState, update: MarketUpdate): void {
-  const accum = getOrCreate(state, update.instrumentId);
-
-  switch (update.kind) {
-    case UpdateKind.Bid:
-      accum.bidCents = update.priceCents;
-      break;
-    case UpdateKind.Ask:
-      accum.askCents = update.priceCents;
-      break;
-    case UpdateKind.Trade: {
-      const qty = BigInt(update.qty);
-      accum.volume += qty;
-      accum.notionalCentsShares += BigInt(update.priceCents) * qty;
-      accum.lastCents = update.priceCents;
-      break;
-    }
-  }
+/** Returns the next state. The previous state is left unchanged. */
+export function applyUpdate(
+  state: MetricsState,
+  update: MarketUpdate
+): MetricsState {
+  const prev = state.instruments.get(update.instrumentId) ?? emptyAccum();
+  return withInstrument(state, update.instrumentId, nextAccum(prev, update));
 }
 
 export function toRow(

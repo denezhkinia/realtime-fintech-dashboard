@@ -50,7 +50,7 @@ export class MarketSession implements OnDestroy {
       return;
     }
     this.initError.set(null);
-    this.snapshot.set(message.snapshot);
+    this.snapshot.set(copySnapshot(message.snapshot));
   }
 
   private post(command: WorkerCommand): void {
@@ -79,25 +79,25 @@ export class MarketSession implements OnDestroy {
     if (this.started) return;
     this.started = true;
     this.runId += 1;
-    const settings = this.settings();
     this.post({
       type: WorkerCommandType.Start,
       runId: this.runId,
-      settings,
+      settings: { ...this.settings() },
       seed: this.nextSeed(),
       wasmUrl: this.wasmUrl(),
     });
   }
 
   apply(settings: ProducerSettings): void {
-    this.settings.set({ ...settings });
+    const next = { ...settings };
+    this.settings.set(next);
     this.ensureWorker();
     this.runId += 1;
     this.started = true;
     this.post({
       type: WorkerCommandType.Apply,
       runId: this.runId,
-      settings,
+      settings: { ...next },
       seed: this.nextSeed(),
     });
   }
@@ -121,4 +121,11 @@ export class MarketSession implements OnDestroy {
       this.worker = null;
     }
   }
+}
+
+function copySnapshot(snapshot: MarketSnapshot): MarketSnapshot {
+  return {
+    ...snapshot,
+    rows: snapshot.rows.map((row) => ({ ...row })),
+  };
 }

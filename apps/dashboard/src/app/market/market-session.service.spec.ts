@@ -17,11 +17,11 @@ jest.mock('./create-market-worker', () => ({
 class MockWorker {
   onmessage: ((event: MessageEvent<WorkerMessage>) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
-  readonly posts: WorkerCommand[] = [];
+  posts: readonly WorkerCommand[] = [];
   terminate = jest.fn();
 
   postMessage(command: WorkerCommand): void {
-    this.posts.push(command);
+    this.posts = [...this.posts, command];
   }
 
   emit(message: WorkerMessage): void {
@@ -188,6 +188,31 @@ describe('MarketSession', () => {
       },
     });
     expect(session.snapshot().rows[0]?.volume).toBe(3);
+  });
+
+  it('keeps a private snapshot copy', () => {
+    session.ensureStarted();
+    const liveRunId = lastPost().runId;
+    const row = {
+      instrumentId: 0,
+      symbol: 'INST0',
+      bidCents: 100,
+      askCents: 110,
+      lastCents: 110,
+      volume: 5,
+      vwapCents: 110,
+    };
+    const snapshot: MarketSnapshot = {
+      runId: liveRunId,
+      status: SessionStatus.Running,
+      rows: [row],
+    };
+    worker.emit({ type: WorkerMessageType.Snapshot, snapshot });
+
+    expect(session.snapshot()).not.toBe(snapshot);
+    expect(session.snapshot().rows).not.toBe(snapshot.rows);
+    expect(session.snapshot().rows[0]).not.toBe(row);
+    expect(session.snapshot().rows[0]?.volume).toBe(5);
   });
 
   it('terminates the worker on destroy', () => {

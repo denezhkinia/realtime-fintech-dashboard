@@ -5,14 +5,14 @@ export const DEFAULT_PRODUCER_SETTINGS = {
   intervalMs: 500,
 } as const;
 
-export type ProducerSettings = {
+export type ProducerSettings = Readonly<{
   /** Instruments in the run; integer 1–50. */
   instrumentCount: number;
   /** Updates per Wasm batch; integer 1–1000. */
   batchSize: number;
   /** Generation interval in ms; integer 50–2000. */
   intervalMs: number;
-};
+}>;
 
 /** Monotonic id for a generation run; stale worker messages are rejected. */
 export type RunId = number;
@@ -44,7 +44,7 @@ export enum WorkerMessageType {
 }
 
 /** One instrument row in a UI snapshot (cents until display). */
-export type InstrumentSnapshot = {
+export type InstrumentSnapshot = Readonly<{
   instrumentId: number;
   symbol: string;
   bidCents: number | null;
@@ -54,18 +54,18 @@ export type InstrumentSnapshot = {
   volume: number;
   /** Volume-weighted average price in cents; null when volume is 0. */
   vwapCents: number | null;
-};
+}>;
 
 /** Object snapshot posted worker → UI (throttled ≤10 Hz). */
-export type MarketSnapshot = {
+export type MarketSnapshot = Readonly<{
   runId: RunId;
   status: SessionStatus;
   errorMessage?: string;
-  rows: InstrumentSnapshot[];
-};
+  rows: readonly InstrumentSnapshot[];
+}>;
 
 /** Commands posted UI → worker. Every command carries `runId`. */
-export type WorkerCommand =
+export type WorkerCommand = Readonly<
   | {
       type: WorkerCommandType.Start;
       runId: RunId;
@@ -80,9 +80,11 @@ export type WorkerCommand =
       seed: number;
     }
   | { type: WorkerCommandType.Pause; runId: RunId }
-  | { type: WorkerCommandType.Resume; runId: RunId };
+  | { type: WorkerCommandType.Resume; runId: RunId }
+>;
 
 /** Messages posted worker → UI. */
-export type WorkerMessage =
+export type WorkerMessage = Readonly<
   | { type: WorkerMessageType.Snapshot; snapshot: MarketSnapshot }
-  | { type: WorkerMessageType.InitError; runId: RunId; message: string };
+  | { type: WorkerMessageType.InitError; runId: RunId; message: string }
+>;

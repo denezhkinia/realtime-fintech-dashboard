@@ -63,22 +63,11 @@ function clearSnapshotTimer(): void {
   }
 }
 
-function buildRows(): InstrumentSnapshot[] {
+function buildRows(): readonly InstrumentSnapshot[] {
   if (!settings) return [];
-  const rows: InstrumentSnapshot[] = [];
-  for (let id = 0; id < settings.instrumentCount; id++) {
-    const row = toRow(metrics, id, symbolForInstrument(id));
-    rows.push({
-      instrumentId: row.instrumentId,
-      symbol: row.symbol,
-      bidCents: row.bidCents,
-      askCents: row.askCents,
-      lastCents: row.lastCents,
-      volume: row.volume,
-      vwapCents: row.vwapCents,
-    });
-  }
-  return rows;
+  return Array.from({ length: settings.instrumentCount }, (_, id) =>
+    toRow(metrics, id, symbolForInstrument(id))
+  );
 }
 
 type PublishableStatus =
@@ -122,17 +111,16 @@ function ingestBatch(): void {
   const ptr = api.nextBatch();
   const len = api.batchByteLength();
   const bytes = new Uint8Array(api.memory.buffer, ptr, len).slice();
-  const updates = decodeBatch(bytes);
-  for (const update of updates) {
+  metrics = decodeBatch(bytes).reduce((state, update) => {
     const kind = updateKindFromWasm(update.kind);
-    if (!kind) continue;
-    applyUpdate(metrics, {
+    if (!kind) return state;
+    return applyUpdate(state, {
       instrumentId: update.instrumentId,
       kind,
       priceCents: update.priceCents,
       qty: update.qty,
     });
-  }
+  }, metrics);
 }
 
 function tick(): void {
@@ -164,7 +152,7 @@ function resetAndRun(
     throw new Error('Producer Wasm is not initialized');
   }
   runId = nextRunId;
-  settings = next;
+  settings = { ...next };
   intervalMs = next.intervalMs;
   metrics = createMetricsState();
   api.configure(next.instrumentCount, next.batchSize);
@@ -183,7 +171,7 @@ self.onmessage = async (event: MessageEvent<WorkerCommand>) => {
         clearGenerationTimer();
         clearSnapshotTimer();
         runId = command.runId;
-        settings = command.settings;
+        settings = { ...command.settings };
         intervalMs = command.settings.intervalMs;
         api = await loadWasm(command.wasmUrl);
         resetAndRun(command.settings, command.seed, command.runId);
