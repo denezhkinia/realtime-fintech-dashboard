@@ -6,6 +6,9 @@
  *     u8  kind        // 0=bid, 1=ask, 2=trade
  *     i32 priceCents
  *     u32 qty
+ *
+ * Generation walks in ticks of up to 3 records (bid, ask, trade) sharing the
+ * same mid snapshot so trade ∈ {bid, ask} and bid < ask are observable.
  */
 const KIND_BID: u8 = 0;
 const KIND_ASK: u8 = 1;
@@ -37,6 +40,20 @@ function storeU8(offset: i32, value: u8): void {
   store<u8>(changetype<usize>(buffer) + offset, value);
 }
 
+function writeRecord(
+  offset: i32,
+  id: i32,
+  kind: u8,
+  price: i32,
+  qty: u32
+): i32 {
+  storeU32(offset, id as u32);
+  storeU8(offset + 4, kind);
+  storeI32(offset + 5, price);
+  storeU32(offset + 9, qty);
+  return offset + RECORD_SIZE;
+}
+
 /** Seeded xorshift32 — all randomness lives in Wasm. */
 function nextU32(): u32 {
   let x = rngState;
@@ -58,9 +75,18 @@ function clampI32(value: i32, lo: i32, hi: i32): i32 {
   return value;
 }
 
+function evolveMid(id: i32): i32 {
+  let mid = unchecked(mids[id]);
+  let step = (nextBounded(11) as i32) - 5;
+  if (step == 0) step = 1;
+  mid = clampI32(mid + step, 100, 1_000_000);
+  unchecked((mids[id] = mid));
+  return mid;
+}
+
 /**
  * Configure producer sizing. Call before reset/nextBatch.
- * instrumentCount: 1..50, batchSize: 1..1000.
+ * instrumentCount: 1..50, batchSize: 1..1000 (record count).
  */
 export function configure(nextInstrumentCount: i32, nextBatchSize: i32): void {
   instrumentCount = clampI32(nextInstrumentCount, 1, MAX_INSTRUMENTS);
@@ -89,48 +115,39 @@ export function batchByteLength(): i32 {
  * @returns Pointer to the start of the batch payload.
  */
 export function nextBatch(): usize {
-  const count = batchSize;
-  storeU32(0, count as u32);
-
+  const target = batchSize;
+  let written: i32 = 0;
   let offset: i32 = HEADER_SIZE;
 
-  for (let n: i32 = 0; n < count; n++) {
+  while (written < target) {
     const id = nextBounded(instrumentCount as u32) as i32;
-    let mid = unchecked(mids[id]);
-
-    // Random-walk mid by [-5, +5] cents (nonzero step preferred).
-    let step = (nextBounded(11) as i32) - 5;
-    if (step == 0) step = 1;
-    mid = clampI32(mid + step, 100, 1_000_000);
-    unchecked((mids[id] = mid));
-
-    // Half-spread ≥ 1 ⇒ bid < ask always.
+    const mid = evolveMid(id);
     const halfSpread: i32 = 1 + (nextBounded(5) as i32);
     const bid = mid - halfSpread;
     const ask = mid + halfSpread;
+    const remaining = target - written;
 
-    const kindRoll = nextBounded(3);
-    let kind: u8 = KIND_BID;
-    let price: i32 = bid;
-    let qty: u32 = 1 + nextBounded(50);
-
-    if (kindRoll == 1) {
-      kind = KIND_ASK;
-      price = ask;
-    } else if (kindRoll == 2) {
-      kind = KIND_TRADE;
-      // Trade price ∈ {bid, ask}
-      price = nextBounded(2) == 0 ? bid : ask;
-      qty = 1 + nextBounded(100);
+    if (remaining >= 3) {
+      const quoteQty: u32 = 1 + nextBounded(50);
+      const tradeQty: u32 = 1 + nextBounded(100);
+      const tradePrice = nextBounded(2) == 0 ? bid : ask;
+      offset = writeRecord(offset, id, KIND_BID, bid, quoteQty);
+      offset = writeRecord(offset, id, KIND_ASK, ask, quoteQty);
+      offset = writeRecord(offset, id, KIND_TRADE, tradePrice, tradeQty);
+      written += 3;
+    } else if (remaining == 2) {
+      const quoteQty: u32 = 1 + nextBounded(50);
+      offset = writeRecord(offset, id, KIND_BID, bid, quoteQty);
+      offset = writeRecord(offset, id, KIND_ASK, ask, quoteQty);
+      written += 2;
+    } else {
+      const quoteQty: u32 = 1 + nextBounded(50);
+      offset = writeRecord(offset, id, KIND_BID, bid, quoteQty);
+      written += 1;
     }
-
-    storeU32(offset, id as u32);
-    storeU8(offset + 4, kind);
-    storeI32(offset + 5, price);
-    storeU32(offset + 9, qty);
-    offset += RECORD_SIZE;
   }
 
+  storeU32(0, written as u32);
   lastBatchBytes = offset;
   return changetype<usize>(buffer);
 }

@@ -54,6 +54,9 @@ importers:
       '@angular/language-service':
         specifier: ~19.2.0
         version: 19.2.25
+      '@assemblyscript/loader':
+        specifier: 0.27.31
+        version: 0.27.31
       '@eslint/js':
         specifier: ^9.8.0
         version: 9.39.5
@@ -371,6 +374,9 @@ packages:
       '@angular/core': 19.2.25
       '@angular/platform-browser': 19.2.25
       rxjs: ^6.5.3 || ^7.4.0
+
+  '@assemblyscript/loader@0.27.31':
+    resolution: {integrity: sha512-4iIYAgtMesSE+jeXbJW1AUV148ikhj+WzuYAzcQJDXDO5F+HkyPAOBTY3omiHmL2iJTQIjQfTfFumJGr7LEaEA==}
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -8004,6 +8010,8 @@ snapshots:
       '@angular/platform-browser': 19.2.25(@angular/common@19.2.25(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@19.2.25(rxjs@7.8.2)(zone.js@0.15.1))
       rxjs: 7.8.2
       tslib: 2.8.1
+
+  '@assemblyscript/loader@0.27.31': {}
 
   '@babel/code-frame@7.29.7':
     dependencies:
