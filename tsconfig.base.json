@@ -1,0 +1,26 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@realtime-fintech/market-metrics": ["libs/market-metrics/src/index.ts"],
+      "@realtime-fintech/market-producer": [
+        "libs/market-producer/src/index.ts"
+      ],
+      "@realtime-fintech/market-protocol": ["libs/market-protocol/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}
