@@ -34,5 +34,5 @@ docker compose up --build
 
 ## Links
 
-- Repository: _(add after push)_
-- Live demo (GitHub Pages): _(add after first deploy)_
+- Repository: https://github.com/denezhkinia/realtime-fintech-dashboard
+- Live demo: https://denezhkinia.github.io/realtime-fintech-dashboard/
