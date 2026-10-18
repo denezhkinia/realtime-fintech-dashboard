@@ -1,9 +1,8 @@
 export {
-  KIND_ASK,
-  KIND_BID,
-  KIND_TRADE,
+  WasmUpdateKind,
   RECORD_SIZE,
   HEADER_SIZE,
   decodeBatch,
+  updateKindFromWasm,
   type BatchUpdate,
 } from './batch-format';

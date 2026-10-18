@@ -1,3 +1,4 @@
+import { UpdateKind } from '@realtime-fintech/market-protocol';
 import { applyUpdate, createMetricsState, toRow } from './market-metrics';
 
 describe('market-metrics', () => {
@@ -5,13 +6,13 @@ describe('market-metrics', () => {
     const state = createMetricsState();
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'trade',
+      kind: UpdateKind.Trade,
       priceCents: 10_000,
       qty: 10,
     });
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'trade',
+      kind: UpdateKind.Trade,
       priceCents: 10_200,
       qty: 30,
     });
@@ -25,13 +26,13 @@ describe('market-metrics', () => {
     const state = createMetricsState();
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'bid',
+      kind: UpdateKind.Bid,
       priceCents: 10_000,
       qty: 5,
     });
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'ask',
+      kind: UpdateKind.Ask,
       priceCents: 10_100,
       qty: 5,
     });
@@ -47,13 +48,13 @@ describe('market-metrics', () => {
     const state = createMetricsState();
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'trade',
+      kind: UpdateKind.Trade,
       priceCents: 10_000,
       qty: 10,
     });
     applyUpdate(state, {
       instrumentId: 1,
-      kind: 'trade',
+      kind: UpdateKind.Trade,
       priceCents: 20_000,
       qty: 2,
     });
@@ -70,19 +71,19 @@ describe('market-metrics', () => {
     const state = createMetricsState();
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'bid',
+      kind: UpdateKind.Bid,
       priceCents: 9_900,
       qty: 100,
     });
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'ask',
+      kind: UpdateKind.Ask,
       priceCents: 10_100,
       qty: 100,
     });
     applyUpdate(state, {
       instrumentId: 0,
-      kind: 'trade',
+      kind: UpdateKind.Trade,
       priceCents: 10_100,
       qty: 7,
     });

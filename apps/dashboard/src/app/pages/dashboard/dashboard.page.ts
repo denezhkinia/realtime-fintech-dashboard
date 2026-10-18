@@ -4,6 +4,7 @@ import {
   computed,
   inject,
 } from '@angular/core';
+import { SessionStatus } from '@realtime-fintech/market-protocol';
 import { MarketSession } from '../../market/market-session.service';
 import { formatCents } from './format-money';
 
@@ -21,12 +22,14 @@ export class DashboardPage {
   readonly initError = this.session.initError;
   readonly statusLabel = computed(() => {
     const status = this.snapshot().status;
-    if (status === 'idle') return 'Idle';
-    if (status === 'running') return 'Running';
-    if (status === 'paused') return 'Paused';
+    if (status === SessionStatus.Idle) return 'Idle';
+    if (status === SessionStatus.Running) return 'Running';
+    if (status === SessionStatus.Paused) return 'Paused';
     return 'Error';
   });
-  readonly isRunning = computed(() => this.snapshot().status === 'running');
+  readonly isRunning = computed(
+    () => this.snapshot().status === SessionStatus.Running
+  );
   readonly formatCents = formatCents;
 
   constructor() {

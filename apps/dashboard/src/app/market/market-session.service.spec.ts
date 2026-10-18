@@ -1,8 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import type {
-  MarketSnapshot,
-  WorkerCommand,
-  WorkerMessage,
+import {
+  SessionStatus,
+  WorkerCommandType,
+  WorkerMessageType,
+  type MarketSnapshot,
+  type WorkerCommand,
+  type WorkerMessage,
 } from '@realtime-fintech/market-protocol';
 import { createMarketWorker } from './create-market-worker';
 import { MarketSession } from './market-session.service';
@@ -58,14 +61,14 @@ describe('MarketSession', () => {
   it('Apply posts a new runId and clears prior snapshot rows when worker reports', () => {
     session.ensureStarted();
     const start = lastPost();
-    expect(start.type).toBe('start');
+    expect(start.type).toBe(WorkerCommandType.Start);
     const startRunId = start.runId;
 
     worker.emit({
-      type: 'snapshot',
+      type: WorkerMessageType.Snapshot,
       snapshot: {
         runId: startRunId,
-        status: 'running',
+        status: SessionStatus.Running,
         rows: [
           {
             instrumentId: 0,
@@ -83,14 +86,14 @@ describe('MarketSession', () => {
 
     session.apply({ instrumentCount: 3, batchSize: 50, intervalMs: 200 });
     const apply = lastPost();
-    expect(apply.type).toBe('apply');
+    expect(apply.type).toBe(WorkerCommandType.Apply);
     expect(apply.runId).toBeGreaterThan(startRunId);
 
     worker.emit({
-      type: 'snapshot',
+      type: WorkerMessageType.Snapshot,
       snapshot: {
         runId: apply.runId,
-        status: 'running',
+        status: SessionStatus.Running,
         rows: [
           {
             instrumentId: 0,
@@ -105,7 +108,7 @@ describe('MarketSession', () => {
       },
     });
     expect(session.snapshot().rows[0]?.volume).toBe(0);
-    expect(session.snapshot().status).toBe('running');
+    expect(session.snapshot().status).toBe(SessionStatus.Running);
   });
 
   it('pause keeps existing totals from the last snapshot', () => {
@@ -113,7 +116,7 @@ describe('MarketSession', () => {
     const startRunId = lastPost().runId;
     const populated: MarketSnapshot = {
       runId: startRunId,
-      status: 'running',
+      status: SessionStatus.Running,
       rows: [
         {
           instrumentId: 0,
@@ -126,16 +129,19 @@ describe('MarketSession', () => {
         },
       ],
     };
-    worker.emit({ type: 'snapshot', snapshot: populated });
+    worker.emit({ type: WorkerMessageType.Snapshot, snapshot: populated });
 
     session.pause();
-    expect(lastPost()).toEqual({ type: 'pause', runId: startRunId });
+    expect(lastPost()).toEqual({
+      type: WorkerCommandType.Pause,
+      runId: startRunId,
+    });
 
     worker.emit({
-      type: 'snapshot',
-      snapshot: { ...populated, status: 'paused' },
+      type: WorkerMessageType.Snapshot,
+      snapshot: { ...populated, status: SessionStatus.Paused },
     });
-    expect(session.snapshot().status).toBe('paused');
+    expect(session.snapshot().status).toBe(SessionStatus.Paused);
     expect(session.snapshot().rows[0]?.volume).toBe(42);
   });
 
@@ -144,10 +150,10 @@ describe('MarketSession', () => {
     const liveRunId = lastPost().runId;
 
     worker.emit({
-      type: 'snapshot',
+      type: WorkerMessageType.Snapshot,
       snapshot: {
         runId: liveRunId - 1,
-        status: 'running',
+        status: SessionStatus.Running,
         rows: [
           {
             instrumentId: 0,
@@ -164,10 +170,10 @@ describe('MarketSession', () => {
     expect(session.snapshot().rows).toEqual([]);
 
     worker.emit({
-      type: 'snapshot',
+      type: WorkerMessageType.Snapshot,
       snapshot: {
         runId: liveRunId,
-        status: 'running',
+        status: SessionStatus.Running,
         rows: [
           {
             instrumentId: 0,

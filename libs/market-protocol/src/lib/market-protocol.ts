@@ -17,7 +17,31 @@ export type ProducerSettings = {
 /** Monotonic id for a generation run; stale worker messages are rejected. */
 export type RunId = number;
 
-export type SessionStatus = 'idle' | 'running' | 'paused' | 'error';
+/** Quote / trade kind used by metrics and the UI. */
+export enum UpdateKind {
+  Bid = 'bid',
+  Ask = 'ask',
+  Trade = 'trade',
+}
+
+export enum SessionStatus {
+  Idle = 'idle',
+  Running = 'running',
+  Paused = 'paused',
+  Error = 'error',
+}
+
+export enum WorkerCommandType {
+  Start = 'start',
+  Apply = 'apply',
+  Pause = 'pause',
+  Resume = 'resume',
+}
+
+export enum WorkerMessageType {
+  Snapshot = 'snapshot',
+  InitError = 'init-error',
+}
 
 /** One instrument row in a UI snapshot (cents until display). */
 export type InstrumentSnapshot = {
@@ -43,22 +67,22 @@ export type MarketSnapshot = {
 /** Commands posted UI → worker. Every command carries `runId`. */
 export type WorkerCommand =
   | {
-      type: 'start';
+      type: WorkerCommandType.Start;
       runId: RunId;
       settings: ProducerSettings;
       seed: number;
       wasmUrl: string;
     }
   | {
-      type: 'apply';
+      type: WorkerCommandType.Apply;
       runId: RunId;
       settings: ProducerSettings;
       seed: number;
     }
-  | { type: 'pause'; runId: RunId }
-  | { type: 'resume'; runId: RunId };
+  | { type: WorkerCommandType.Pause; runId: RunId }
+  | { type: WorkerCommandType.Resume; runId: RunId };
 
 /** Messages posted worker → UI. */
 export type WorkerMessage =
-  | { type: 'snapshot'; snapshot: MarketSnapshot }
-  | { type: 'init-error'; runId: RunId; message: string };
+  | { type: WorkerMessageType.Snapshot; snapshot: MarketSnapshot }
+  | { type: WorkerMessageType.InitError; runId: RunId; message: string };

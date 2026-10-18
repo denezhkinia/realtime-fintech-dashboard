@@ -1,7 +1,5 @@
 /// <reference lib="webworker" />
 /**
- * MWG (S8–S9): cpp-on-the-web, performance, break-up-long-tasks,
- * schedule-tasks-by-priority, security.
  * Whole Wasm + aggregation run in this Worker. UI receives object snapshots
  * at ≤10 Hz (plus immediate publish on pause/apply). No SharedArrayBuffer.
  */
@@ -11,20 +9,20 @@ import {
   createMetricsState,
   toRow,
   type MetricsState,
-  type UpdateKind,
 } from '@realtime-fintech/market-metrics';
 import {
-  KIND_ASK,
-  KIND_BID,
-  KIND_TRADE,
   decodeBatch,
+  updateKindFromWasm,
 } from '@realtime-fintech/market-producer';
-import type {
-  InstrumentSnapshot,
-  ProducerSettings,
-  RunId,
-  WorkerCommand,
-  WorkerMessage,
+import {
+  SessionStatus,
+  WorkerCommandType,
+  WorkerMessageType,
+  type InstrumentSnapshot,
+  type ProducerSettings,
+  type RunId,
+  type WorkerCommand,
+  type WorkerMessage,
 } from '@realtime-fintech/market-protocol';
 import { symbolForInstrument } from './instrument-symbols';
 
@@ -65,13 +63,6 @@ function clearSnapshotTimer(): void {
   }
 }
 
-function kindFromCode(code: number): UpdateKind | null {
-  if (code === KIND_BID) return 'bid';
-  if (code === KIND_ASK) return 'ask';
-  if (code === KIND_TRADE) return 'trade';
-  return null;
-}
-
 function buildRows(): InstrumentSnapshot[] {
   if (!settings) return [];
   const rows: InstrumentSnapshot[] = [];
@@ -90,14 +81,19 @@ function buildRows(): InstrumentSnapshot[] {
   return rows;
 }
 
+type PublishableStatus =
+  | SessionStatus.Running
+  | SessionStatus.Paused
+  | SessionStatus.Error;
+
 function publishSnapshot(
-  status: 'running' | 'paused' | 'error',
+  status: PublishableStatus,
   errorMessage?: string
 ): void {
   lastSnapshotAt = Date.now();
   clearSnapshotTimer();
   post({
-    type: 'snapshot',
+    type: WorkerMessageType.Snapshot,
     snapshot: {
       runId,
       status,
@@ -108,7 +104,7 @@ function publishSnapshot(
 }
 
 /** Throttle UI snapshots to ≤10 Hz while aggregating every batch. */
-function scheduleSnapshot(status: 'running' | 'paused' | 'error'): void {
+function scheduleSnapshot(status: PublishableStatus): void {
   const elapsed = Date.now() - lastSnapshotAt;
   if (elapsed >= SNAPSHOT_MIN_INTERVAL_MS) {
     publishSnapshot(status);
@@ -128,7 +124,7 @@ function ingestBatch(): void {
   const bytes = new Uint8Array(api.memory.buffer, ptr, len).slice();
   const updates = decodeBatch(bytes);
   for (const update of updates) {
-    const kind = kindFromCode(update.kind);
+    const kind = updateKindFromWasm(update.kind);
     if (!kind) continue;
     applyUpdate(metrics, {
       instrumentId: update.instrumentId,
@@ -141,7 +137,7 @@ function ingestBatch(): void {
 
 function tick(): void {
   ingestBatch();
-  scheduleSnapshot('running');
+  scheduleSnapshot(SessionStatus.Running);
 }
 
 function startGenerationTimer(): void {
@@ -176,14 +172,14 @@ function resetAndRun(
   clearGenerationTimer();
   startGenerationTimer();
   // Immediate publish on apply/start.
-  publishSnapshot('running');
+  publishSnapshot(SessionStatus.Running);
 }
 
 self.onmessage = async (event: MessageEvent<WorkerCommand>) => {
   const command = event.data;
   try {
     switch (command.type) {
-      case 'start': {
+      case WorkerCommandType.Start: {
         clearGenerationTimer();
         clearSnapshotTimer();
         runId = command.runId;
@@ -193,28 +189,28 @@ self.onmessage = async (event: MessageEvent<WorkerCommand>) => {
         resetAndRun(command.settings, command.seed, command.runId);
         break;
       }
-      case 'apply': {
+      case WorkerCommandType.Apply: {
         if (!api) {
           throw new Error('Apply received before Wasm init');
         }
         resetAndRun(command.settings, command.seed, command.runId);
         break;
       }
-      case 'pause': {
+      case WorkerCommandType.Pause: {
         if (command.runId !== runId) return;
         // Pause stops generation with no catch-up batches.
         clearGenerationTimer();
-        publishSnapshot('paused');
+        publishSnapshot(SessionStatus.Paused);
         break;
       }
-      case 'resume': {
+      case WorkerCommandType.Resume: {
         if (command.runId !== runId) return;
         if (!api || !settings) {
           throw new Error('Resume received before producer was configured');
         }
         intervalMs = settings.intervalMs;
         startGenerationTimer();
-        publishSnapshot('running');
+        publishSnapshot(SessionStatus.Running);
         break;
       }
     }
@@ -222,8 +218,8 @@ self.onmessage = async (event: MessageEvent<WorkerCommand>) => {
     clearGenerationTimer();
     clearSnapshotTimer();
     const message = error instanceof Error ? error.message : String(error);
-    post({ type: 'init-error', runId, message });
-    publishSnapshot('error', message);
+    post({ type: WorkerMessageType.InitError, runId, message });
+    publishSnapshot(SessionStatus.Error, message);
   }
 };
 

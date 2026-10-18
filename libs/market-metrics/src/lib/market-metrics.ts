@@ -1,4 +1,6 @@
-export type UpdateKind = 'bid' | 'ask' | 'trade';
+import { UpdateKind } from '@realtime-fintech/market-protocol';
+
+export { UpdateKind };
 
 export type MarketUpdate = {
   instrumentId: number;
@@ -61,13 +63,13 @@ export function applyUpdate(state: MetricsState, update: MarketUpdate): void {
   const accum = getOrCreate(state, update.instrumentId);
 
   switch (update.kind) {
-    case 'bid':
+    case UpdateKind.Bid:
       accum.bidCents = update.priceCents;
       break;
-    case 'ask':
+    case UpdateKind.Ask:
       accum.askCents = update.priceCents;
       break;
-    case 'trade': {
+    case UpdateKind.Trade: {
       const qty = BigInt(update.qty);
       accum.volume += qty;
       accum.notionalCentsShares += BigInt(update.priceCents) * qty;

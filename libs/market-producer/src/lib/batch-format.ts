@@ -1,7 +1,12 @@
-/** Matches assembly/index.ts binary layout. */
-export const KIND_BID = 0;
-export const KIND_ASK = 1;
-export const KIND_TRADE = 2;
+import { UpdateKind } from '@realtime-fintech/market-protocol';
+
+/** Matches assembly/index.ts binary layout (numeric kinds stay in Wasm). */
+export enum WasmUpdateKind {
+  Bid = 0,
+  Ask = 1,
+  Trade = 2,
+}
+
 export const RECORD_SIZE = 13;
 export const HEADER_SIZE = 4;
 
@@ -11,6 +16,20 @@ export type BatchUpdate = {
   priceCents: number;
   qty: number;
 };
+
+/** Map a Wasm kind code to the shared UpdateKind once at the TS boundary. */
+export function updateKindFromWasm(code: number): UpdateKind | null {
+  switch (code) {
+    case WasmUpdateKind.Bid:
+      return UpdateKind.Bid;
+    case WasmUpdateKind.Ask:
+      return UpdateKind.Ask;
+    case WasmUpdateKind.Trade:
+      return UpdateKind.Trade;
+    default:
+      return null;
+  }
+}
 
 export function decodeBatch(bytes: Uint8Array): BatchUpdate[] {
   if (bytes.byteLength < HEADER_SIZE) {

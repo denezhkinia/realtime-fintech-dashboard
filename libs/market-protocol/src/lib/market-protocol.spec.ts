@@ -1,5 +1,8 @@
 import {
   DEFAULT_PRODUCER_SETTINGS,
+  SessionStatus,
+  WorkerCommandType,
+  WorkerMessageType,
   type MarketSnapshot,
   type WorkerCommand,
   type WorkerMessage,
@@ -18,21 +21,26 @@ describe('market-protocol defaults', () => {
 describe('market-protocol shapes', () => {
   it('allows a typed apply command with runId', () => {
     const command: WorkerCommand = {
-      type: 'apply',
+      type: WorkerCommandType.Apply,
       runId: 1,
       seed: 42,
       settings: { ...DEFAULT_PRODUCER_SETTINGS },
     };
     expect(command.runId).toBe(1);
+    expect(command.type).toBe(WorkerCommandType.Apply);
   });
 
   it('allows a typed snapshot message with runId', () => {
     const snapshot: MarketSnapshot = {
       runId: 2,
-      status: 'running',
+      status: SessionStatus.Running,
       rows: [],
     };
-    const message: WorkerMessage = { type: 'snapshot', snapshot };
+    const message: WorkerMessage = {
+      type: WorkerMessageType.Snapshot,
+      snapshot,
+    };
     expect(message.snapshot.runId).toBe(2);
+    expect(message.type).toBe(WorkerMessageType.Snapshot);
   });
 });

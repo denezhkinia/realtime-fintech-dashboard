@@ -1,12 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { instantiate } from '@assemblyscript/loader';
-import {
-  KIND_ASK,
-  KIND_BID,
-  KIND_TRADE,
-  decodeBatch,
-} from './batch-format';
+import { WasmUpdateKind, decodeBatch } from './batch-format';
 
 type ProducerExports = {
   memory: WebAssembly.Memory;
@@ -52,8 +47,8 @@ describe('market-producer wasm', () => {
       const a = updates[i];
       const b = updates[i + 1];
       if (
-        a.kind === KIND_BID &&
-        b.kind === KIND_ASK &&
+        a.kind === WasmUpdateKind.Bid &&
+        b.kind === WasmUpdateKind.Ask &&
         a.instrumentId === b.instrumentId
       ) {
         expect(a.priceCents).toBeLessThan(b.priceCents);
@@ -72,9 +67,9 @@ describe('market-producer wasm', () => {
       const ask = updates[i + 1];
       const trade = updates[i + 2];
       if (
-        bid.kind === KIND_BID &&
-        ask.kind === KIND_ASK &&
-        trade.kind === KIND_TRADE &&
+        bid.kind === WasmUpdateKind.Bid &&
+        ask.kind === WasmUpdateKind.Ask &&
+        trade.kind === WasmUpdateKind.Trade &&
         bid.instrumentId === ask.instrumentId &&
         ask.instrumentId === trade.instrumentId
       ) {

@@ -1,8 +1,11 @@
 export {
   DEFAULT_PRODUCER_SETTINGS,
+  SessionStatus,
+  UpdateKind,
+  WorkerCommandType,
+  WorkerMessageType,
   type ProducerSettings,
   type RunId,
-  type SessionStatus,
   type InstrumentSnapshot,
   type MarketSnapshot,
   type WorkerCommand,

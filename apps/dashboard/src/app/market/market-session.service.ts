@@ -1,6 +1,9 @@
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import {
   DEFAULT_PRODUCER_SETTINGS,
+  SessionStatus,
+  WorkerCommandType,
+  WorkerMessageType,
   type MarketSnapshot,
   type ProducerSettings,
   type WorkerCommand,
@@ -16,7 +19,7 @@ export class MarketSession implements OnDestroy {
 
   readonly snapshot = signal<MarketSnapshot>({
     runId: 0,
-    status: 'idle',
+    status: SessionStatus.Idle,
     rows: [],
   });
   readonly settings = signal<ProducerSettings>({ ...DEFAULT_PRODUCER_SETTINGS });
@@ -36,7 +39,7 @@ export class MarketSession implements OnDestroy {
   }
 
   private onWorkerMessage(message: WorkerMessage): void {
-    if (message.type === 'init-error') {
+    if (message.type === WorkerMessageType.InitError) {
       if (message.runId !== this.runId) return;
       this.initError.set(message.message);
       return;
@@ -61,7 +64,10 @@ export class MarketSession implements OnDestroy {
       typeof location !== 'undefined' && location.origin
         ? location.origin
         : 'http://localhost';
-    return new URL('wasm/market-producer.wasm', new URL(baseHref, origin)).toString();
+    return new URL(
+      'wasm/market-producer.wasm',
+      new URL(baseHref, origin)
+    ).toString();
   }
 
   private nextSeed(): number {
@@ -75,7 +81,7 @@ export class MarketSession implements OnDestroy {
     this.runId += 1;
     const settings = this.settings();
     this.post({
-      type: 'start',
+      type: WorkerCommandType.Start,
       runId: this.runId,
       settings,
       seed: this.nextSeed(),
@@ -89,7 +95,7 @@ export class MarketSession implements OnDestroy {
     this.runId += 1;
     this.started = true;
     this.post({
-      type: 'apply',
+      type: WorkerCommandType.Apply,
       runId: this.runId,
       settings,
       seed: this.nextSeed(),
@@ -98,7 +104,7 @@ export class MarketSession implements OnDestroy {
 
   pause(): void {
     if (!this.started) return;
-    this.post({ type: 'pause', runId: this.runId });
+    this.post({ type: WorkerCommandType.Pause, runId: this.runId });
   }
 
   resume(): void {
@@ -106,7 +112,7 @@ export class MarketSession implements OnDestroy {
       this.ensureStarted();
       return;
     }
-    this.post({ type: 'resume', runId: this.runId });
+    this.post({ type: WorkerCommandType.Resume, runId: this.runId });
   }
 
   ngOnDestroy(): void {
