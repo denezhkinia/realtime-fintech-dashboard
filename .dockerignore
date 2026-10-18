@@ -1,0 +1,10 @@
+node_modules
+dist
+.tmp
+.nx
+.angular
+coverage
+.git
+**/build
+*.md
+!README.md
