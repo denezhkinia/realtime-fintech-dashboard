@@ -35,11 +35,11 @@
         @for (row of snapshot().rows; track row.instrumentId) {
           <tr>
             <th scope="row">{{ row.symbol }}</th>
-            <td>{{ formatCents(row.bidCents) }}</td>
-            <td>{{ formatCents(row.askCents) }}</td>
-            <td>{{ formatCents(row.lastCents) }}</td>
-            <td>{{ row.volume }}</td>
-            <td>{{ formatCents(row.vwapCents) }}</td>
+            <td>{{ row.bidCents | centsCurrency }}</td>
+            <td>{{ row.askCents | centsCurrency }}</td>
+            <td>{{ row.lastCents | centsCurrency }}</td>
+            <td>{{ row.volume | marketVolume }}</td>
+            <td>{{ row.vwapCents | centsCurrency }}</td>
           </tr>
         } @empty {
           <tr>

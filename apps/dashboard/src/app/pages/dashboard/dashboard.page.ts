@@ -6,11 +6,13 @@ import {
 } from '@angular/core';
 import { SessionStatus } from '@realtime-fintech/market-protocol';
 import { MarketSession } from '../../market/market-session.service';
-import { formatCents } from './format-money';
+import { CentsCurrencyPipe } from './cents-currency.pipe';
+import { MarketVolumePipe } from './market-volume.pipe';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
+  imports: [CentsCurrencyPipe, MarketVolumePipe],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,7 +32,6 @@ export class DashboardPage {
   readonly isRunning = computed(
     () => this.snapshot().status === SessionStatus.Running
   );
-  readonly formatCents = formatCents;
 
   constructor() {
     this.session.ensureStarted();
