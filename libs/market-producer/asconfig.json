@@ -1,0 +1,10 @@
+{
+  "entries": ["./assembly/index.ts"],
+  "options": {
+    "runtime": "stub",
+    "optimizeLevel": 3,
+    "shrinkLevel": 2,
+    "exportRuntime": false,
+    "outFile": "../../apps/dashboard/public/wasm/market-producer.wasm"
+  }
+}

@@ -44,3 +44,8 @@ Thumbs.db
 .angular
 
 .superpowers/
+
+libs/market-producer/build/
+
+apps/dashboard/public/wasm/*.wasm
+apps/dashboard/public/wasm/*.wasm.map

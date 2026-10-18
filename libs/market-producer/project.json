@@ -5,6 +5,16 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/apps/dashboard/public/wasm/market-producer.wasm"
+      ],
+      "options": {
+        "command": "pnpm exec asc --config asconfig.json",
+        "cwd": "libs/market-producer"
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
