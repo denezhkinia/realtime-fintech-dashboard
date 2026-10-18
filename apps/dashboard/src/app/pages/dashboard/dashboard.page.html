@@ -1,0 +1,52 @@
+<section class="dash" aria-labelledby="dash-heading">
+  <div class="dash__toolbar">
+    <h1 id="dash-heading">Market</h1>
+    <p class="dash__status" aria-live="polite">
+      Status: <strong>{{ statusLabel() }}</strong>
+      @if (initError()) {
+        <span class="dash__error"> — {{ initError() }}</span>
+      }
+    </p>
+    <div class="dash__controls">
+      @if (isRunning()) {
+        <button type="button" class="ctrl" (click)="pause()">Pause</button>
+      } @else {
+        <button type="button" class="ctrl" (click)="resume()">Resume</button>
+      }
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <caption>
+        Live instrument quotes and cumulative volume / VWAP since run start
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Symbol</th>
+          <th scope="col">Bid</th>
+          <th scope="col">Ask</th>
+          <th scope="col">Last</th>
+          <th scope="col">Volume</th>
+          <th scope="col">VWAP</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of snapshot().rows; track row.instrumentId) {
+          <tr>
+            <th scope="row">{{ row.symbol }}</th>
+            <td>{{ formatCents(row.bidCents) }}</td>
+            <td>{{ formatCents(row.askCents) }}</td>
+            <td>{{ formatCents(row.lastCents) }}</td>
+            <td>{{ row.volume }}</td>
+            <td>{{ formatCents(row.vwapCents) }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">Waiting for market data…</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

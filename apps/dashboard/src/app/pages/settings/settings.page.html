@@ -1,0 +1,76 @@
+<section class="settings" aria-labelledby="settings-heading">
+  <h1 id="settings-heading">Settings</h1>
+  <p class="settings__lead">
+    Draft values stay local until you apply them. Apply resets the run and
+    starts generation with the new integers.
+  </p>
+
+  <form
+    #settingsForm
+    class="settings__form"
+    (submit)="onSubmit($event)"
+    novalidate
+  >
+    <div class="field">
+      <label for="instrumentCount">Instrument count</label>
+      <span id="instrumentCount-hint" class="hint">Integer from 1 to 50</span>
+      <input
+        id="instrumentCount"
+        name="instrumentCount"
+        type="number"
+        inputmode="numeric"
+        formControlName="instrumentCount"
+        required
+        min="1"
+        max="50"
+        step="1"
+        aria-describedby="instrumentCount-hint instrumentCount-error"
+      />
+      <div id="instrumentCount-error" class="error-msg" role="alert">
+        Enter an integer between 1 and 50.
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="batchSize">Batch size</label>
+      <span id="batchSize-hint" class="hint">Integer from 1 to 1000</span>
+      <input
+        id="batchSize"
+        name="batchSize"
+        type="number"
+        inputmode="numeric"
+        formControlName="batchSize"
+        required
+        min="1"
+        max="1000"
+        step="1"
+        aria-describedby="batchSize-hint batchSize-error"
+      />
+      <div id="batchSize-error" class="error-msg" role="alert">
+        Enter an integer between 1 and 1000.
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="intervalMs">Interval (ms)</label>
+      <span id="intervalMs-hint" class="hint">Integer from 50 to 2000</span>
+      <input
+        id="intervalMs"
+        name="intervalMs"
+        type="number"
+        inputmode="numeric"
+        formControlName="intervalMs"
+        required
+        min="50"
+        max="2000"
+        step="1"
+        aria-describedby="intervalMs-hint intervalMs-error"
+      />
+      <div id="intervalMs-error" class="error-msg" role="alert">
+        Enter an integer between 50 and 2000.
+      </div>
+    </div>
+
+    <button type="submit" class="apply">Apply</button>
+  </form>
+</section>

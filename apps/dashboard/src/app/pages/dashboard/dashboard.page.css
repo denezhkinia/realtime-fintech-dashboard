@@ -1,0 +1,153 @@
+/* MWG: responsive-table, accessibility */
+.dash__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-block-end: 1rem;
+}
+
+.dash__toolbar h1 {
+  margin: 0;
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1.75rem;
+}
+
+.dash__status {
+  margin: 0;
+  color: #3a4a5f;
+}
+
+.dash__error {
+  color: #b3261e;
+}
+
+.dash__controls {
+  margin-inline-start: auto;
+}
+
+.ctrl {
+  min-block-size: 2.5rem;
+  min-inline-size: 5.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #142033;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #142033;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ctrl:focus-visible {
+  outline: 3px solid #0b57d0;
+  outline-offset: 2px;
+}
+
+.table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(560px, 70vh);
+  container-type: inline-size;
+  border: 1px solid #c9d3df;
+  background: color-mix(in srgb, #ffffff 90%, transparent);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  --label-1: 'Symbol';
+  --label-2: 'Bid';
+  --label-3: 'Ask';
+  --label-4: 'Last';
+  --label-5: 'Volume';
+  --label-6: 'VWAP';
+}
+
+caption {
+  padding: 0.75rem 1rem;
+  text-align: start;
+  font-weight: 600;
+  caption-side: top;
+}
+
+th,
+td {
+  padding: 0.65rem 0.85rem;
+  text-align: start;
+  border-block-end: 1px solid #d7e0ea;
+  white-space: nowrap;
+}
+
+thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: #e8eef5;
+}
+
+tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 0;
+  background: #f7fafc;
+  font-weight: 600;
+}
+
+@container (width < 600px) {
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-block-end: 1rem;
+    border: 1px solid #c9d3df;
+    background: #fff;
+  }
+
+  tbody th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: #e8eef5;
+  }
+
+  td {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.5rem;
+    white-space: normal;
+  }
+
+  /* Label before value; slash form gives AT a clean accessible name. */
+  td:nth-child(2)::before {
+    content: var(--label-2) ' / ' var(--label-2);
+    font-weight: 600;
+  }
+  td:nth-child(3)::before {
+    content: var(--label-3) ' / ' var(--label-3);
+    font-weight: 600;
+  }
+  td:nth-child(4)::before {
+    content: var(--label-4) ' / ' var(--label-4);
+    font-weight: 600;
+  }
+  td:nth-child(5)::before {
+    content: var(--label-5) ' / ' var(--label-5);
+    font-weight: 600;
+  }
+  td:nth-child(6)::before {
+    content: var(--label-6) ' / ' var(--label-6);
+    font-weight: 600;
+  }
+}

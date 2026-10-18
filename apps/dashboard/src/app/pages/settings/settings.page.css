@@ -1,0 +1,78 @@
+/* MWG: forms, validate-input-after-interaction, required-field-feedback,
+   accessible-error-announcement, accessibility */
+.settings {
+  max-inline-size: 28rem;
+}
+
+.settings__lead {
+  color: #3a4a5f;
+  line-height: 1.45;
+}
+
+.settings__form {
+  display: grid;
+  gap: 1.25rem;
+  margin-block-start: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-weight: 600;
+}
+
+.hint {
+  color: #5a6b80;
+  font-size: 0.875rem;
+}
+
+.field input {
+  min-block-size: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #8a9bb0;
+  border-radius: 0.25rem;
+  font: inherit;
+  background: #fff;
+}
+
+.field input:focus-visible {
+  outline: 3px solid #0b57d0;
+  outline-offset: 2px;
+}
+
+.error-msg {
+  display: none;
+  color: #b3261e;
+  font-size: 0.875rem;
+}
+
+.field input:user-invalid {
+  border-color: #b3261e;
+  background-color: #fce8e6;
+}
+
+.field input:user-invalid ~ .error-msg {
+  display: block;
+}
+
+.apply {
+  justify-self: start;
+  min-block-size: 2.5rem;
+  min-inline-size: 6rem;
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: #142033;
+  color: #f5f8fb;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.apply:focus-visible {
+  outline: 3px solid #0b57d0;
+  outline-offset: 2px;
+}
